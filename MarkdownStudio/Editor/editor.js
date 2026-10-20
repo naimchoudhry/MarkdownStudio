@@ -20,6 +20,7 @@ window.setMarkdown = markdown => {
   ignoreScrollUntil = performance.now() + 150;
   window.scrollTo(0, scrollY);
   applyFolding();
+  applySyntaxHighlighting();
   refreshFind();
 };
 
@@ -71,6 +72,7 @@ const escapeHTML = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/
 
 editor.addEventListener('input', () => {
   applyFolding();
+  scheduleSyntaxHighlighting();
   scheduleSync();
   scheduleFindRefresh();
 });
@@ -476,9 +478,15 @@ function highlightFind() {
   CSS.highlights.delete('find');
   CSS.highlights.delete('find-current');
   if (!findState?.matches.length) return;
-  CSS.highlights.set('find', new Highlight(...findState.matches.map(m => m.range)));
+  const all = new Highlight(...findState.matches.map(m => m.range));
+  all.priority = 1; // above syntax colours
+  CSS.highlights.set('find', all);
   const current = findState.matches[findState.current];
-  if (current) CSS.highlights.set('find-current', new Highlight(current.range));
+  if (current) {
+    const highlight = new Highlight(current.range);
+    highlight.priority = 2;
+    CSS.highlights.set('find-current', highlight);
+  }
 }
 
 function revealCurrentMatch() {
@@ -782,3 +790,60 @@ editor.addEventListener('mousedown', event => {
   event.preventDefault();
   toggleSection(heading);
 });
+
+// ---------------------------------------------------------------------------
+// Syntax highlighting for fenced code blocks with a language (```swift). Colours are drawn with the
+// CSS Custom Highlight API, so the code stays plain, editable text and the Markdown is unaffected.
+// ---------------------------------------------------------------------------
+
+let syntaxFrame = null;
+
+function codeLanguage(pre) {
+  return pre.getAttribute('data-lang') || ((pre.querySelector('code')?.className || '').match(/language-(\S+)/) || [])[1];
+}
+
+// The code block's text, with line breaks from <br>s, and a map back to its text nodes.
+function codeTextIndex(pre) {
+  const segments = [];
+  let text = '';
+  const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      if (node.tagName === 'BR') text += '\n';
+      continue;
+    }
+    segments.push({ node, start: text.length });
+    text += node.nodeValue;
+  }
+  return { text, segments };
+}
+
+function applySyntaxHighlighting() {
+  if (!window.CSS?.highlights) return;
+  const highlights = new Map(Syntax.TYPES.map(type => [type, new Highlight()]));
+  for (const pre of editor.querySelectorAll('pre')) {
+    const language = codeLanguage(pre);
+    const definition = language && Syntax.language(language);
+    if (!definition) continue;
+    const { text, segments } = codeTextIndex(pre);
+    if (!segments.length) continue;
+    for (const token of Syntax.tokenize(text, definition)) {
+      const range = document.createRange();
+      range.setStart(...positionAt(segments, token.start, false));
+      range.setEnd(...positionAt(segments, token.end, true));
+      highlights.get(token.type)?.add(range);
+    }
+  }
+  for (const [type, highlight] of highlights) {
+    if (highlight.size) CSS.highlights.set(`syntax-${type}`, highlight);
+    else CSS.highlights.delete(`syntax-${type}`);
+  }
+}
+
+function scheduleSyntaxHighlighting() {
+  if (syntaxFrame) return;
+  syntaxFrame = requestAnimationFrame(() => {
+    syntaxFrame = null;
+    applySyntaxHighlighting();
+  });
+}

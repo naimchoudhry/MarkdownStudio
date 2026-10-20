@@ -845,15 +845,19 @@ enum GuideContent {
     print(greeting)
     ```
 
-    ## Language names
+    ## Language names and syntax colouring
 
-    Write the language's name after the opening backticks. Many Markdown apps, such as GitHub, use it to color the code:
+    Write the language's name after the opening backticks. Markdown Studio then colours the code in the rendered pane (keywords, strings, comments, numbers, types and function names), in Xcode's colours with a matching Dark Mode palette. GitHub and many other Markdown apps use the name the same way:
 
     ~~~markdown
     ```swift
     struct Point { var x, y: Double }
     ```
     ~~~
+
+    Supported languages: Swift, Python, JavaScript and TypeScript, JSON, shell (`bash`, `sh`, `zsh`), HTML and XML, CSS, C, C++, Objective-C, Java, Kotlin, C#, Go, Rust, Ruby, SQL, YAML and diffs. Common short names such as `py`, `js`, `ts`, `sh` and `yml` work too. Code blocks without a language name, or with one that isn't supported, are shown without colour.
+
+    The colouring updates as you edit a code block, and it's only for display: the code is saved exactly as you typed it.
 
     ## Indented code
 

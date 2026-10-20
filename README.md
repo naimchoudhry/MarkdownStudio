@@ -15,6 +15,7 @@
 - **Two editable panes.** Type Markdown on the left, or edit the formatted document on the right like a word processor. Each side updates the other as you type.
 - **Formatting toolbar.** Text styles (Body, Title 1–6, Code Block), bold, italic, strikethrough, inline code, bulleted lists with bullet styles, numbered lists, checklists, block quotes, links and horizontal rules.
 - **Copy and paste that understands Markdown.** Copy from the rendered pane and get Markdown as plain text, plus rich text for other apps. Paste plain-text Markdown into the rendered pane and it's formatted.
+- **Syntax colouring.** Fenced code blocks with a language name are coloured in the rendered pane in Xcode's colours: Swift, Python, JavaScript/TypeScript, JSON, shell, HTML, CSS, C/C++/Objective-C, Java, Kotlin, C#, Go, Rust, Ruby, SQL, YAML and diffs.
 - **Find & Replace.** Search either pane, with match case, whole word / starts with / ends with, wrap around, and regular expressions with `$1`-style replacements.
 - **Linked scrolling.** Keep both panes aligned as you scroll, line for line, even inside long lists and tables, or scroll them independently.
 - **Collapsible sections and outline view.** Fold any section from its title, or show only Titles 1–N to see the document's outline.
@@ -80,7 +81,7 @@ MarkdownStudio/
 ├── ContentView.swift            Window layout and title-bar controls
 ├── SourceEditorView.swift       Markdown pane (NSTextView)
 ├── RenderedEditorView.swift     Rendered pane (WKWebView)
-├── Editor/                      editor.html, editor.js, markdown.js
+├── Editor/                      editor.html, editor.js, markdown.js, syntax.js
 ├── FormattingToolbar.swift      Toolbar above the rendered pane
 ├── FindController.swift, FindBar.swift
 ├── ScrollSync.swift             Linked scrolling

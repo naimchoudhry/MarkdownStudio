@@ -97,11 +97,52 @@
   #editor > .md-collapsed::before,
   #editor > .md-headings-only::before { transform: rotate(-90deg); }
   #editor > .md-collapsed { color: var(--muted); }
+  /* Syntax colours for code blocks (Xcode's default themes) */
+  :root {
+    --syntax-keyword: #9B2393;
+    --syntax-string: #C41A16;
+    --syntax-comment: #5D6C79;
+    --syntax-number: #1C00CF;
+    --syntax-type: #0B4F79;
+    --syntax-function: #326D74;
+    --syntax-attribute: #815F03;
+    --syntax-preprocessor: #643820;
+    --syntax-property: #3900A0;
+    --syntax-inserted: #1A7F37;
+    --syntax-deleted: #CF222E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --syntax-keyword: #FF7AB2;
+      --syntax-string: #FF8170;
+      --syntax-comment: #7F8C98;
+      --syntax-number: #D9C97C;
+      --syntax-type: #5DD8FF;
+      --syntax-function: #67B7A4;
+      --syntax-attribute: #CC9768;
+      --syntax-preprocessor: #FD8F3F;
+      --syntax-property: #A167E6;
+      --syntax-inserted: #3FB950;
+      --syntax-deleted: #F85149;
+    }
+  }
+  ::highlight(syntax-keyword), ::highlight(syntax-literal) { color: var(--syntax-keyword); }
+  ::highlight(syntax-string) { color: var(--syntax-string); }
+  ::highlight(syntax-comment) { color: var(--syntax-comment); }
+  ::highlight(syntax-number) { color: var(--syntax-number); }
+  ::highlight(syntax-type) { color: var(--syntax-type); }
+  ::highlight(syntax-function) { color: var(--syntax-function); }
+  ::highlight(syntax-attribute) { color: var(--syntax-attribute); }
+  ::highlight(syntax-preprocessor) { color: var(--syntax-preprocessor); }
+  ::highlight(syntax-property), ::highlight(syntax-variable) { color: var(--syntax-property); }
+  ::highlight(syntax-inserted) { color: var(--syntax-inserted); }
+  ::highlight(syntax-deleted) { color: var(--syntax-deleted); }
   ::highlight(find) { background-color: rgba(255, 200, 0, 0.35); }
   ::highlight(find-current) { background-color: #FFC800; color: #1F2328; }
   .offscreen { position: fixed; left: -100000px; top: 0; width: 800px; }
 </style>
 <script src="markdown.js"></script>
+<script src="syntax.js"></script>
 </head>
 <body>
 <article id="editor" contenteditable="true" spellcheck="true"></article>
