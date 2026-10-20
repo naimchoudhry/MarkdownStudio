@@ -1,0 +1,16 @@
+# Build output (install.sh builds into build/)
+build/
+build-*/
+DerivedData/
+
+# Xcode per-user state
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+# Archives and exports
+*.xcarchive
+*.dmg
+
+# macOS
+.DS_Store

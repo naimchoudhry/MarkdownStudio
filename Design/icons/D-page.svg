@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="d-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E3896A"/><stop offset="1" stop-color="#C4613F"/>
+    </linearGradient>
+    <filter id="d-shadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+    <filter id="d-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#5A2414" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#d-bg)" filter="url(#d-shadow)"/>
+  <rect x="101.5" y="101.5" width="821" height="821" rx="183.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="3"/>
+  <g filter="url(#d-soft)">
+    <path d="M290 230 H620 L734 344 V770 a24 24 0 0 1 -24 24 H290 a24 24 0 0 1 -24 -24 V254 a24 24 0 0 1 24 -24 Z" fill="#F5F1E8"/>
+  </g>
+  <path d="M620 230 V320 a24 24 0 0 0 24 24 H734 Z" fill="#E4D9C6"/>
+  <g fill="none" stroke="#D97757" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M330 640 V470 L402 548 L474 470 V640"/>
+    <path d="M592 470 V630 M538 578 L592 632 L646 578"/>
+  </g>
+  <g fill="#D97757" opacity="0.35">
+    <rect x="330" y="360" width="200" height="26" rx="13"/>
+    <rect x="330" y="690" width="300" height="22" rx="11"/>
+  </g>
+</svg>
