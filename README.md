@@ -27,6 +27,10 @@ Supported Markdown includes CommonMark plus GitHub-Flavored Markdown tables, str
 
 ## Screenshots
 
+**Syntax colouring**
+
+![Swift, Python and JSON code blocks coloured in the rendered pane, next to their Markdown source](docs/images/code-colouring.png)
+
 | Find & Replace | Outline view |
 | --- | --- |
 | ![Find and Replace highlighting every match in the rendered pane](docs/images/find-replace.png) | ![Outline view showing only the document's titles](docs/images/outline.png) |
@@ -91,4 +95,4 @@ docs/                            README screenshots and Demo.md
 Design/                          App icon sources
 ```
 
-Try it with [`docs/Demo.md`](docs/Demo.md).
+Try it with [`docs/Demo.md`](docs/Demo.md) and [`docs/Code Samples.md`](docs/Code%20Samples.md).
