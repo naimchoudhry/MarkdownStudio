@@ -136,7 +136,7 @@ private struct ScrollLinkButton: View {
     }
 }
 
-/// Hides or shows the Markdown pane. It sits in the Markdown pane's header, and moves to the start
+/// Hides or shows the Markdown pane. It sits at the end of the Markdown pane's header, and moves to the start
 /// of the formatting toolbar while the pane is hidden.
 struct MarkdownPaneButton: View {
     let layout: PaneLayout
@@ -159,7 +159,6 @@ private struct SourceHeader: View {
 
     var body: some View {
         HStack {
-            MarkdownPaneButton(layout: layout)
             Label("Markdown", systemImage: "number")
                 .font(.callout.weight(.medium))
             Spacer()
@@ -167,9 +166,10 @@ private struct SourceHeader: View {
                 .font(.callout)
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
+            MarkdownPaneButton(layout: layout)
         }
-        .padding(.leading, 10)
-        .padding(.trailing, 12)
+        .padding(.leading, 12)
+        .padding(.trailing, 10)
         .frame(height: 36)
         .background(.bar)
     }

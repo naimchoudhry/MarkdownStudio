@@ -129,7 +129,7 @@ enum GuideContent {
 
     ## Hiding the Markdown pane
 
-    To see only the formatted document, click the **sidebar** button at the left of the Markdown pane's header, or choose **View ▸ Show or Hide Markdown Pane** (⌃⌘M). While the pane is hidden, the same button sits at the start of the formatting toolbar: click it to bring the Markdown pane back; it opens at the same place in the document as the rendered pane.
+    To see only the formatted document, click the **sidebar** button at the right of the Markdown pane's header, after the word count, or choose **View ▸ Show or Hide Markdown Pane** (⌃⌘M). While the pane is hidden, the same button sits at the start of the formatting toolbar: click it to bring the Markdown pane back; it opens at the same place in the document as the rendered pane.
 
     Each tab remembers this on its own, so you can hide the Markdown pane in one tab and keep both panes in another. While the pane is hidden, Find & Replace searches the rendered pane.
 
