@@ -28,6 +28,7 @@ struct SourceEditorView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.font = .monospacedSystemFont(ofSize: ViewZoom.baseSourceFontSize * zoom, weight: .regular)
         textView.textContainerInset = NSSize(width: 12, height: 16)
+        textView.backgroundColor = SourceTextView.paneBackground
         textView.string = text
         scrollView.contentView.postsBoundsChangedNotifications = true
 
@@ -62,6 +63,36 @@ struct SourceEditorView: NSViewRepresentable {
     }
 
     final class SourceTextView: NSTextView {
+        /// Very light gray with a fine paper-like grain in light mode; a touch lighter than the default
+        /// text background, with the same grain, in dark mode.
+        static let paneBackground: NSColor = {
+            let light = NSColor(patternImage: grainImage(base: 0.965, amount: 0.035))
+            let dark = NSColor(patternImage: grainImage(base: 0.14, amount: 0.03))
+            return NSColor(name: "MarkdownPaneBackground") { appearance in
+                appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? dark : light
+            }
+        }()
+
+        /// A seamless tile of random gray speckles around `base`, at 2× resolution so the grain stays fine.
+        private static func grainImage(base: CGFloat, amount: CGFloat) -> NSImage {
+            let pixels = 256
+            let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+                                       bitsPerSample: 8, samplesPerPixel: 1, hasAlpha: false, isPlanar: false,
+                                       colorSpaceName: .deviceWhite, bytesPerRow: pixels, bitsPerPixel: 8)!
+            var seed: UInt32 = 0x9E3779B9
+            let data = rep.bitmapData!
+            for index in 0..<(pixels * pixels) {
+                // xorshift: deterministic, so the texture is identical every launch.
+                seed ^= seed << 13; seed ^= seed >> 17; seed ^= seed << 5
+                let noise = CGFloat(seed % 1000) / 999 * 2 - 1
+                data[index] = UInt8((min(max(base + noise * amount, 0), 1) * 255).rounded())
+            }
+            rep.size = NSSize(width: pixels / 2, height: pixels / 2)
+            let image = NSImage(size: rep.size)
+            image.addRepresentation(rep)
+            return image
+        }
+
         var onBecomeFirstResponder: (() -> Void)?
 
         override func becomeFirstResponder() -> Bool {
