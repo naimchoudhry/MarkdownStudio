@@ -20,6 +20,7 @@
 - **Linked scrolling.** Keep both panes aligned as you scroll, line for line, even inside long lists and tables, or scroll them independently.
 - **Collapsible sections and outline view.** Fold any section from its title, or show only Titles 1–N to see the document's outline.
 - **Zoom, Dark Mode and file-path titles.** Scale the text in both panes, choose light, dark or system appearance, and see where each file lives in the window title and tabs.
+- **Hideable Markdown pane.** Hide the source to see only the formatted document, separately in each tab.
 - **Tabs or windows.** Choose whether opened files go in a new tab, a new window, or ask each time.
 - **Built-in guide.** Help ▸ Markdown Studio Guide covers every feature, with a complete Markdown syntax reference.
 
@@ -72,6 +73,7 @@ The script builds into `build/`, quits the app if it's running, replaces `/Appli
 | Zoom in / out / actual size | ⌘+ / ⌘− / ⌘0 |
 | Show everything / titles 1–N | ⌃⌘0 / ⌃⌘1–⌃⌘6 |
 | Link or unlink scrolling | ⌥⌘L |
+| Show or hide the Markdown pane | ⌃⌘M |
 | Open in new tab | ⌥⌘O |
 | Markdown Studio Guide | ⌘? |
 

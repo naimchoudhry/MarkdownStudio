@@ -7,6 +7,7 @@ struct DocumentControllers {
     let editor: EditorController
     let find: FindController
     let scroll: ScrollSync
+    let layout: PaneLayout
 }
 
 /// Tracks the document window in front, so menu commands act on it.

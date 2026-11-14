@@ -126,6 +126,8 @@ struct ScrollCommands: Commands {
             Button("Actual Size") { ViewZoom.reset() }
                 .keyboardShortcut("0")
             Divider()
+            Button("Show or Hide Markdown Pane") { ActiveDocument.shared.current()?.layout.toggleMarkdownPane() }
+                .keyboardShortcut("m", modifiers: [.command, .control])
             Toggle("Show File Path in Title", isOn: $showsFilePath)
             Picker("Dark Mode", selection: AppAppearance.binding($appearance)) {
                 ForEach(AppAppearance.allCases) { option in

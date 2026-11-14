@@ -3,6 +3,7 @@ import SwiftUI
 /// Formatting controls shown above the rendered view.
 struct FormattingToolbar: View {
     @Bindable var controller: EditorController
+    let layout: PaneLayout
     @State private var linkURL = ""
 
     private var state: EditorState { controller.state }
@@ -29,6 +30,11 @@ struct FormattingToolbar: View {
 
     private var editingControls: some View {
         HStack(spacing: 4) {
+            if !layout.isMarkdownPaneVisible {
+                MarkdownPaneButton(layout: layout)
+                separator
+            }
+
             Picker("Text Style", selection: textStyle) {
                 ForEach(TextStyle.allCases) { style in
                     Text(style.title).tag(style)

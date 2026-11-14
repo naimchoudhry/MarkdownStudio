@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var controller = EditorController()
     @State private var find = FindController()
     @State private var scrollSync = ScrollSync()
+    @State private var layout = PaneLayout()
     @AppStorage(ViewZoom.key) private var zoom = 1.0
     @AppStorage(PathTitle.showPathKey) private var showsFilePath = true
 
@@ -17,15 +18,17 @@ struct ContentView: View {
             }
 
             HSplitView {
-                VStack(spacing: 0) {
-                    SourceHeader(text: document.text)
-                    Divider()
-                    SourceEditorView(text: $document.text, findController: find, scrollSync: scrollSync, zoom: zoom)
+                if layout.isMarkdownPaneVisible {
+                    VStack(spacing: 0) {
+                        SourceHeader(text: document.text, layout: layout)
+                        Divider()
+                        SourceEditorView(text: $document.text, findController: find, scrollSync: scrollSync, zoom: zoom)
+                    }
+                    .frame(minWidth: 280, maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(minWidth: 280, maxWidth: .infinity, maxHeight: .infinity)
 
                 VStack(spacing: 0) {
-                    FormattingToolbar(controller: controller)
+                    FormattingToolbar(controller: controller, layout: layout)
                     Divider()
                     RenderedEditorView(
                         markdown: $document.text, controller: controller, findController: find, scrollSync: scrollSync, zoom: zoom
@@ -48,6 +51,22 @@ struct ContentView: View {
                     .help("Show or hide Find (⌘F)")
             }
         }
+        .onChange(of: layout.isMarkdownPaneVisible) { _, visible in
+            if visible {
+                // The pane is recreated at its minimum width and scrolled to the top: restore its width,
+                // then bring it to where the rendered pane is.
+                Task {
+                    try? await Task.sleep(for: .milliseconds(50))
+                    layout.restoreDividerPosition()
+                    try? await Task.sleep(for: .milliseconds(100))
+                    scrollSync.align(to: .rendered)
+                }
+            } else {
+                // Searches can only run in the pane that's still showing.
+                find.target = .rendered
+                find.renderedEngine?.focusPane()
+            }
+        }
         .onChange(of: controller.state.focused) { _, focused in
             ActiveDocument.shared.renderedEditorFocusChanged(focused, in: controller)
         }
@@ -55,8 +74,9 @@ struct ContentView: View {
         .background(WindowReader { window in
             // Keep the content (and the split view's divider) below the title bar, toolbar and tab bar.
             window.styleMask.remove(.fullSizeContentView)
+            layout.window = window
             ActiveDocument.shared.register(
-                DocumentControllers(editor: controller, find: find, scroll: scrollSync), for: window
+                DocumentControllers(editor: controller, find: find, scroll: scrollSync, layout: layout), for: window
             )
             WindowPlacement.shared.place(window)
         })
@@ -116,12 +136,30 @@ private struct ScrollLinkButton: View {
     }
 }
 
+/// Hides or shows the Markdown pane. It sits in the Markdown pane's header, and moves to the start
+/// of the formatting toolbar while the pane is hidden.
+struct MarkdownPaneButton: View {
+    let layout: PaneLayout
+
+    var body: some View {
+        let visible = layout.isMarkdownPaneVisible
+        Button(visible ? "Hide Markdown Pane" : "Show Markdown Pane", systemImage: "sidebar.left") {
+            layout.toggleMarkdownPane()
+        }
+        .labelStyle(.iconOnly)
+        .buttonStyle(.borderless)
+        .help(visible ? "Hide the Markdown pane (⌃⌘M)" : "Show the Markdown pane (⌃⌘M)")
+    }
+}
+
 /// Title bar for the source pane, matching the height of the formatting toolbar.
 private struct SourceHeader: View {
     let text: String
+    let layout: PaneLayout
 
     var body: some View {
         HStack {
+            MarkdownPaneButton(layout: layout)
             Label("Markdown", systemImage: "number")
                 .font(.callout.weight(.medium))
             Spacer()
@@ -130,7 +168,8 @@ private struct SourceHeader: View {
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, 10)
+        .padding(.trailing, 12)
         .frame(height: 36)
         .background(.bar)
     }
