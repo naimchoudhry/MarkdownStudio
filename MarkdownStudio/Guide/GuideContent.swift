@@ -26,7 +26,7 @@ enum GuideContent {
 
     static let chapters: [GuideChapter] = [
         GuideChapter(id: "app", title: "Using Markdown Studio", sections: [
-            welcome, documents, panes, toolbar, outline, findReplace, scrolling, copyPaste, shortcuts, tips,
+            welcome, documents, panes, textFiles, toolbar, outline, findReplace, scrolling, copyPaste, shortcuts, tips,
         ]),
         GuideChapter(id: "markdown", title: "Markdown Syntax", sections: [
             syntax, headings, paragraphs, emphasis, lists, links, images, code, quotes, tables, rules, html, escaping,
@@ -67,7 +67,7 @@ enum GuideContent {
 
     ## Opening files
 
-    - **File ▸ Open…** (⌘O) opens Markdown files (`.md`, `.markdown`, `.mdown`, `.mkd`) and plain-text files.
+    - **File ▸ Open…** (⌘O) opens Markdown files (`.md`, `.markdown`, `.mdown`, `.mkd`), and any other text file: plain text, source code, JSON, config files and so on (see **Text & Code Files**).
     - Drag a file onto the Markdown Studio icon in the Dock or Finder.
     - In Finder, Control-click a file and choose **Open With ▸ Markdown Studio**.
     - **File ▸ Open Recent** lists documents you've used recently.
@@ -75,9 +75,21 @@ enum GuideContent {
     ## Saving
 
     - New documents are saved with the `.md` extension in UTF-8.
+    - Other text files are saved back exactly as they are, with the same name and type: a `.swift` file stays a Swift file.
     - Once a document has been saved, Markdown Studio saves your changes automatically as you work.
     - **File ▸ Duplicate** (⇧⌘S) makes a copy; **File ▸ Rename…** and **File ▸ Move To…** work as in other Mac apps.
-    - **File ▸ Revert To ▸ Browse All Versions…** lets you go back to an earlier version of the document.
+
+    ## Reverting changes
+
+    Once you've changed a document, a **Revert** button (a clock with an arrow) appears in the window toolbar. Use it, or the File menu:
+
+    | Command | What it does |
+    | --- | --- |
+    | Revert to Last Opened (⌥⌘Z) | Goes back to the document as it was when you opened it in this tab, after asking. You can undo it with Edit ▸ Undo. |
+    | Revert to Last Saved | Goes back to the last save. Markdown Studio saves automatically as you work, so this is usually only a little way back. |
+    | Browse All Versions… | Shows earlier versions of the file side by side with the current one, so you can restore one or copy text from it. |
+
+    Each tab remembers its own "last opened" text, so reverting one tab never affects another.
 
     ## Multiple documents: tabs or windows
 
@@ -91,6 +103,8 @@ enum GuideContent {
     | System Setting | It follows "Prefer tabs when opening documents" in System Settings ▸ Desktop & Dock. |
 
     To choose for just one file, use **File ▸ Open in New Tab…** (⌥⌘O) or **File ▸ Open in New Window…**.
+
+    Clicking **+** at the end of the tab bar asks whether to create a **New Document** or **Open…** existing documents. Either way, they open as new tabs in that window.
 
     Windows reopened when Markdown Studio starts keep their previous arrangement. You can always rearrange later with **Window ▸ Merge All Windows**, or by dragging a tab out of the tab bar.
     """#)
@@ -125,11 +139,11 @@ enum GuideContent {
 
     ## Resizing
 
-    Drag the divider between the panes to give either side more room.
+    A Markdown document opens with the Markdown pane taking a third of the window and the rendered pane two thirds. Drag the divider between the panes to give either side more room.
 
     ## Hiding the Markdown pane
 
-    To see only the formatted document, click the **sidebar** button at the right of the Markdown pane's header, after the word count, or choose **View ▸ Show or Hide Markdown Pane** (⌃⌘M). While the pane is hidden, the same button sits at the start of the formatting toolbar: click it to bring the Markdown pane back; it opens at the same place in the document as the rendered pane.
+    To see only the formatted document, click the **sidebar** button at the left of the Markdown pane's header, or choose **View ▸ Show or Hide Markdown Pane** (⌃⌘M). While the pane is hidden, the same button sits at the start of the formatting toolbar: click it to bring the Markdown pane back; it opens at the same place in the document as the rendered pane.
 
     Each tab remembers this on its own, so you can hide the Markdown pane in one tab and keep both panes in another. While the pane is hidden, Find & Replace searches the rendered pane.
 
@@ -141,7 +155,7 @@ enum GuideContent {
 
     The window title and tabs show where the file is, as well as its name: as much of the folder path as fits, shortened from the front, for example `…/Projects/Notes/todo.md`. Your home folder is shown as `~`.
 
-    To show just the file name, click the **folder** button in the window toolbar (it's highlighted while the path is shown), or choose **View ▸ Show File Path in Title**. The setting is remembered.
+    To show just the file name, click the **path** button (an arrow turning down and right) in the window toolbar (it's highlighted while the path is shown), or choose **View ▸ Show File Path in Title**. The setting is remembered.
 
     ## Dark Mode
 
@@ -159,6 +173,46 @@ enum GuideContent {
 
     Click the **Link Scrolling** button in the window toolbar to keep both panes aligned as you scroll. See **Linked Scrolling**.
     """#)
+
+    static let textFiles = GuideSection(id: "text-files", title: "Text & Code Files", symbol: "curlybraces", markdown: ##"""
+    # Text & Code Files
+
+    Markdown Studio also works as a quick editor for plain text, source code and config files — the kind of file you might otherwise edit in Terminal with `nano` or `vim`.
+
+    When you open a file that isn't Markdown, the window shows a single plain-text pane. There's no rendered pane, formatting toolbar or linked scrolling. The pane's header names the file's format, such as **Swift**, **JSON** or **Python**, and counts its lines.
+
+    ## Colouring
+
+    Code is coloured in Xcode's colours, recognised from the file's extension or name:
+
+    | Format | Files |
+    | --- | --- |
+    | Swift | `.swift` |
+    | Python | `.py` |
+    | JavaScript / TypeScript | `.js`, `.mjs`, `.jsx`, `.ts`, `.tsx` |
+    | JSON | `.json` |
+    | Shell Script | `.sh`, `.bash`, `.zsh`, and files such as `.zshrc`, `.bashrc` and `.profile` |
+    | HTML / XML / Property List | `.html`, `.xml`, `.svg`, `.plist` |
+    | CSS | `.css`, `.scss`, `.less` |
+    | C, C++, Objective-C | `.c`, `.h`, `.cpp`, `.hpp`, `.m`, `.mm` |
+    | Java, Kotlin, C#, Go, Rust, Ruby | `.java`, `.kt`, `.cs`, `.go`, `.rs`, `.rb` |
+    | SQL, YAML, Diff | `.sql`, `.yaml`, `.yml`, `.diff`, `.patch` |
+
+    Plain text (`.txt`), logs, CSV and other text files open without colouring. Files that aren't text, such as images, aren't opened.
+
+    ## Saving
+
+    The file is saved back exactly as it is, with the same name and type. Markdown Studio never adds formatting, and smart quotes and other substitutions stay off, so code and config files keep working.
+
+    ## Opening files from Terminal
+
+    Use `open -a MarkdownStudio` followed by the file:
+
+    ```shell
+    open -a MarkdownStudio ~/.zshrc
+    open -a MarkdownStudio Package.swift
+    ```
+    """##)
 
     static let toolbar = GuideSection(id: "toolbar", title: "Formatting Toolbar", symbol: "textformat", markdown: #"""
     # Formatting Toolbar
@@ -410,6 +464,7 @@ enum GuideContent {
     | Save | ⌘S |
     | Duplicate | ⇧⌘S |
     | Close window | ⌘W |
+    | Revert to Last Opened | ⌥⌘Z |
     | Open this guide | ⌘? |
 
     ## Editing (both panes)
@@ -815,9 +870,18 @@ enum GuideContent {
     [diagram]: https://example.com/diagram.png
     ~~~
 
+    ## Images next to your document
+
+    Images with relative paths, like `images/photo.png`, are found relative to the document's folder.
+
+    macOS only lets Markdown Studio read the document you opened, so the first time a document shows images from its folder, a bar above the rendered pane asks for access. Click **Allow Access…** and choose the folder (it starts at the document's folder). If the images are in a folder higher up, such as `../images/`, choose a folder that contains them.
+
+    Markdown Studio remembers the folder, so images in it and in all the folders inside it show from then on. Click **Not Now** to hide the bar for that window.
+
     ## Notes
 
-    - Markdown Studio shows images from web addresses. Images with relative file paths, like `images/photo.png`, are kept in the Markdown but aren't shown in the rendered pane.
+    - Images from web addresses are shown straight away.
+    - The Markdown always keeps the image paths exactly as written.
     - To control an image's size, use HTML instead: `<img src="photo.png" width="300">`.
     """#)
 

@@ -41,13 +41,32 @@ final class ScrollSync {
         isLinked.toggle()
     }
 
+    /// A (re)created Markdown pane starts at the top. Until it has been brought to the rendered pane's
+    /// position, it follows: anything it reports meanwhile must not scroll the rendered pane.
+    func markdownPaneDidAppear(_ pane: LineScrollable) {
+        let isReappearing = renderedPane != nil
+        markdownPane = pane
+        guard isReappearing else { return }
+        leader = .rendered
+        leaderUntil = ContinuousClock.now + .seconds(1)
+    }
+
+    /// Makes `pane` the leader for a moment, so scrolling reported by the other pane is ignored.
+    func hold(leader pane: Pane, for duration: Duration = .milliseconds(500)) {
+        let until = ContinuousClock.now + duration
+        leaderUntil = leader == pane ? max(leaderUntil, until) : until
+        leader = pane
+    }
+
     /// Scrolls the other pane to match `pane` (by default, the chosen anchor) once.
     func align(to pane: Pane? = nil) {
         let leader = pane ?? anchor
         let (source, follower) = leader == .markdown ? (markdownPane, renderedPane) : (renderedPane, markdownPane)
         guard let source, let follower else { return }
+        // Keep any longer hold already in place for this leader (see `markdownPaneDidAppear`).
+        let until = ContinuousClock.now + Self.leaderHold
+        leaderUntil = self.leader == leader ? max(leaderUntil, until) : until
         self.leader = leader
-        leaderUntil = ContinuousClock.now + Self.leaderHold
         Task {
             let line = await source.currentLine()
             follower.scroll(toLine: line)
@@ -72,6 +91,8 @@ final class ScrollSync {
     /// The rendered pane re-renders after source edits; keep it aligned with the source being edited.
     func renderedPaneDidReload() {
         guard isLinked else { return }
+        // Not while a just-shown Markdown pane is still being brought to the rendered pane's position.
+        if leader == .rendered, ContinuousClock.now < leaderUntil { return }
         align(to: .markdown)
     }
 }

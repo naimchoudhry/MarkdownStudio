@@ -135,8 +135,23 @@ final class EditorController {
     var state = EditorState()
     /// Shows the link editor popover in the toolbar.
     var isEditingLink = false
+    /// Shows the bar offering access to images next to the document.
+    var isImageAccessNeeded = false
+    /// The user chose Not Now, so the bar stays hidden for this window.
+    @ObservationIgnored var isImageAccessDeclined = false
 
     @ObservationIgnored weak var webView: WKWebView?
+
+    /// Images whose folder couldn't be read; offers access unless the user has said Not Now.
+    func imagesWereBlocked() {
+        guard !isImageAccessDeclined, !isImageAccessNeeded else { return }
+        isImageAccessNeeded = true
+    }
+
+    /// Loads the page's images again, after access to their folder has been allowed.
+    func reloadImages() {
+        webView?.evaluateJavaScript("reloadImages()")
+    }
 
     func perform(_ command: EditorCommand) {
         guard let webView else { return }

@@ -847,3 +847,20 @@ function scheduleSyntaxHighlighting() {
     applySyntaxHighlighting();
   });
 }
+
+// Relative image paths resolve against the document's folder (served by the app as localfile: URLs).
+// The images' src attributes keep their original text, so the Markdown is unchanged.
+function setBaseURL(url) {
+  let base = document.querySelector('base');
+  if (!url) { base?.remove(); return; }
+  if (!base) { base = document.createElement('base'); document.head.prepend(base); }
+  base.href = url;
+}
+
+// Loads the images again, for example after access to their folder has been allowed.
+function reloadImages() {
+  // Setting the same src doesn't fetch again, so swap in a fresh copy of each image.
+  for (const image of editor.querySelectorAll('img')) {
+    if (image.getAttribute('src')) image.replaceWith(image.cloneNode(true));
+  }
+}

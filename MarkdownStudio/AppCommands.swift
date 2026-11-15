@@ -69,6 +69,8 @@ struct HelpCommands: Commands {
                 .keyboardShortcut("?")
             Button("Markdown Syntax Reference") { show(GuideContent.syntaxID) }
             Button("Keyboard Shortcuts") { show(GuideContent.shortcutsID) }
+            Divider()
+            Button("Version History") { openWindow(id: VersionHistoryView.windowID) }
         }
     }
 
@@ -154,6 +156,26 @@ struct ScrollCommands: Commands {
             }
             Divider()
         }
+    }
+}
+
+/// File menu: revert the document in the front tab.
+struct RevertCommands: Commands {
+    @ObservedObject private var active = ActiveDocument.shared
+
+    var body: some Commands {
+        CommandGroup(after: .saveItem) {
+            Button("Revert to Last Opened…") { revertToLastOpened() }
+                .keyboardShortcut("z", modifiers: [.command, .option])
+        }
+    }
+
+    private func revertToLastOpened() {
+        guard let revert = ActiveDocument.shared.current()?.revert, revert.canRevertToLastOpened else {
+            NSSound.beep()
+            return
+        }
+        revert.revertToLastOpened()
     }
 }
 

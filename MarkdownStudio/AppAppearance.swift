@@ -54,6 +54,7 @@ enum AppAppearance: String, CaseIterable, Identifiable {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppAppearance.apply(.current)
+        WindowPlacement.migrateTabBarSetting()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

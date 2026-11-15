@@ -15,6 +15,7 @@ struct MarkdownStudioApp: App {
             FindCommands()
             ScrollCommands()
             OpenCommands()
+            RevertCommands()
             HelpCommands(navigation: guideNavigation)
         }
 
@@ -22,5 +23,10 @@ struct MarkdownStudioApp: App {
             GuideView(navigation: guideNavigation)
         }
         .defaultSize(width: 960, height: 700)
+
+        Window("Version History", id: VersionHistoryView.windowID) {
+            VersionHistoryView()
+        }
+        .defaultSize(width: 720, height: 760)
     }
 }

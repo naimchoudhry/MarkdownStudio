@@ -8,6 +8,7 @@ struct DocumentControllers {
     let find: FindController
     let scroll: ScrollSync
     let layout: PaneLayout
+    let revert: DocumentRevert
 }
 
 /// Tracks the document window in front, so menu commands act on it.

@@ -31,6 +31,25 @@ enum OpenPlacement: String, CaseIterable, Identifiable {
 final class WindowPlacement {
     static let shared = WindowPlacement()
 
+    /// A fixed tabbing identifier for document windows. SwiftUI's default is built from the document's
+    /// file types, so it (and with it the remembered View ▸ Show Tab Bar setting) changes whenever the
+    /// supported types do.
+    static let tabbingIdentifier = "MarkdownStudio.Document"
+
+    /// Carries the View ▸ Show Tab Bar setting over from SwiftUI's old, type-based tabbing identifiers (once).
+    /// AppKit stores "shown" as true and "hidden" by removing the key, so only a shown tab bar is copied.
+    static func migrateTabBarSetting() {
+        let defaults = UserDefaults.standard
+        let migratedKey = "TabBarSettingMigrated"
+        guard !defaults.bool(forKey: migratedKey) else { return }
+        defaults.set(true, forKey: migratedKey)
+        let prefix = "NSWindowTabbingShoudShowTabBarKey-"
+        let wasShown = defaults.dictionaryRepresentation().contains { key, value in
+            key.hasPrefix(prefix + "SwiftUI-DocumentGroup") && (value as? Bool) == true
+        }
+        if wasShown { defaults.set(true, forKey: prefix + tabbingIdentifier) }
+    }
+
     /// Windows restored at launch keep their saved arrangement.
     var hasFinishedLaunching = false
     /// One-off choices from Open in New Tab / New Window, used by the next windows that open.
@@ -98,10 +117,30 @@ final class WindowPlacement {
         }
     }
 
+    /// A new untitled document, placed like `openDocuments(in:)`.
+    func newDocument(in placement: OpenPlacement) {
+        pendingOverrides.append(placement)
+        NSDocumentController.shared.newDocument(nil)
+    }
+
+    /// Responders for the tab bar's + button, kept alive here: a window doesn't retain its next responder.
+    private let newTabResponders = NSMapTable<NSWindow, NewTabResponder>.weakToStrongObjects()
+
+    /// Makes the tab bar's + button ask whether to create a new document or open existing ones.
+    func handleNewTabButton(in window: NSWindow) {
+        guard newTabResponders.object(forKey: window) == nil else { return }
+        let responder = NewTabResponder(window: window)
+        // The window passes the button's action on to its next responder (SwiftUI's window controller,
+        // which would create an untitled document); this responder goes in between and handles it first.
+        responder.nextResponder = window.nextResponder
+        window.nextResponder = responder
+        newTabResponders.setObject(responder, forKey: window)
+    }
+
     /// File ▸ Open in New Tab / Open in New Window.
     func openDocuments(in placement: OpenPlacement) {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.markdownText, .plainText]
+        panel.allowedContentTypes = MarkdownDocument.readableContentTypes
         panel.allowsMultipleSelection = true
         panel.begin { response in
             MainActor.assumeIsolated {
@@ -117,6 +156,38 @@ final class WindowPlacement {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/// Handles the tab bar's + button by asking whether to create a new document or open existing ones,
+/// in new tabs of this window.
+final class NewTabResponder: NSResponder {
+    private weak var window: NSWindow?
+
+    init(window: NSWindow) {
+        self.window = window
+        super.init()
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+    override func newWindowForTab(_ sender: Any?) {
+        guard let window else { return }
+        let alert = NSAlert()
+        alert.messageText = "New Tab"
+        alert.informativeText = "Create a new document, or open existing documents in new tabs?"
+        alert.addButton(withTitle: "New Document")
+        alert.addButton(withTitle: "Open…")
+        alert.addButton(withTitle: "Cancel")
+        alert.beginSheetModal(for: window) { response in
+            MainActor.assumeIsolated {
+                switch response {
+                case .alertFirstButtonReturn: WindowPlacement.shared.newDocument(in: .tab)
+                case .alertSecondButtonReturn: WindowPlacement.shared.openDocuments(in: .tab)
+                default: break
                 }
             }
         }

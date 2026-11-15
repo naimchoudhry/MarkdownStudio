@@ -11,6 +11,8 @@ struct RenderedEditorView: NSViewRepresentable {
     var scrollSync: ScrollSync?
     var isEditable = true
     var zoom = 1.0
+    /// The document's file, so images with relative paths can be found next to it.
+    var documentURL: URL?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(markdown: $markdown, isEditable: isEditable)
@@ -21,6 +23,10 @@ struct RenderedEditorView: NSViewRepresentable {
         for name in Coordinator.messageNames {
             configuration.userContentController.add(context.coordinator, name: name)
         }
+        let fileHandler = LocalFileSchemeHandler()
+        fileHandler.onBlocked = { [weak controller] in controller?.imagesWereBlocked() }
+        configuration.setURLSchemeHandler(fileHandler, forURLScheme: LocalFileSchemeHandler.scheme)
+        context.coordinator.baseURL = LocalFileSchemeHandler.baseURL(for: documentURL)
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
@@ -44,6 +50,7 @@ struct RenderedEditorView: NSViewRepresentable {
     func updateNSView(_ webView: WKWebView, context: Context) {
         if webView.pageZoom != zoom { webView.pageZoom = zoom }
         context.coordinator.markdown = $markdown
+        context.coordinator.setBaseURL(LocalFileSchemeHandler.baseURL(for: documentURL))
         context.coordinator.render(markdown)
     }
 
@@ -67,6 +74,15 @@ struct RenderedEditorView: NSViewRepresentable {
         fileprivate var pendingScrollLine: Double?
         fileprivate var isApplyingScroll = false
         private var isLoaded = false
+        /// Where relative image paths resolve: the document's folder, served by `LocalFileSchemeHandler`.
+        fileprivate(set) var baseURL = ""
+
+        func setBaseURL(_ url: String) {
+            guard url != baseURL else { return }
+            baseURL = url
+            guard isLoaded else { return }
+            Task { _ = await call("setBaseURL(url)", ["url": url]) }
+        }
 
         init(markdown: Binding<String>, isEditable: Bool) {
             self.markdown = markdown
@@ -81,10 +97,18 @@ struct RenderedEditorView: NSViewRepresentable {
         }
 
         private func push(_ text: String) {
+            // When the change was made while working in this pane (such as Undo here), it keeps its own
+            // scroll position; only changes made in the Markdown pane bring it back in line with that pane.
+            let followsMarkdownPane = !hasFocus
             Task {
                 _ = await call("setMarkdown(markdown)", ["markdown": text])
-                scrollSync?.renderedPaneDidReload()
+                if followsMarkdownPane { scrollSync?.renderedPaneDidReload() }
             }
+        }
+
+        private var hasFocus: Bool {
+            guard let webView, let responder = webView.window?.firstResponder as? NSView else { return false }
+            return responder.isDescendant(of: webView)
         }
 
         fileprivate func call(_ body: String, _ arguments: [String: Any] = [:]) async -> Any? {
@@ -136,7 +160,8 @@ struct RenderedEditorView: NSViewRepresentable {
             let text = displayedMarkdown ?? markdown.wrappedValue
             let isEditable = isEditable
             Task {
-                _ = await call("setEditable(editable); setMarkdown(markdown)", ["editable": isEditable, "markdown": text])
+                _ = await call("setBaseURL(base); setEditable(editable); setMarkdown(markdown)",
+                               ["base": baseURL, "editable": isEditable, "markdown": text])
                 if isEditable { scrollSync?.renderedPaneDidReload() }
             }
         }
@@ -144,7 +169,13 @@ struct RenderedEditorView: NSViewRepresentable {
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
             guard let url = navigationAction.request.url else { return .cancel }
             if navigationAction.navigationType == .linkActivated {
-                NSWorkspace.shared.open(url)
+                if let file = LocalFileSchemeHandler.fileURL(for: url) {
+                    // A relative link: open the file it points to, unless it's just a #heading in this document.
+                    let isThisFolder = file.standardizedFileURL.path == URL(string: baseURL).map { LocalFileSchemeHandler.fileURL(for: $0)?.standardizedFileURL.path } ?? nil
+                    if !(isThisFolder && url.fragment != nil) { NSWorkspace.shared.open(file) }
+                } else {
+                    NSWorkspace.shared.open(url)
+                }
                 return .cancel
             }
             return url.isFileURL ? .allow : .cancel

@@ -1,12 +1,14 @@
 import AppKit
 import SwiftUI
 
-/// Plain-text Markdown source editor backed by `NSTextView`.
+/// Plain-text source editor backed by `NSTextView`: the Markdown pane, or the only pane for other text files.
 struct SourceEditorView: NSViewRepresentable {
     @Binding var text: String
     var findController: FindController?
     var scrollSync: ScrollSync?
     var zoom = 1.0
+    /// The `syntax.js` language to colour the text as, or nil for none.
+    var syntaxLanguage: String?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -38,11 +40,13 @@ struct SourceEditorView: NSViewRepresentable {
         coordinator.findController = findController
         coordinator.scrollSync = scrollSync
         findController?.markdownEngine = coordinator
-        scrollSync?.markdownPane = coordinator
+        scrollSync?.markdownPaneDidAppear(coordinator)
         textView.onBecomeFirstResponder = { [weak findController] in
             findController?.paneDidBecomeActive(.markdown)
         }
         coordinator.observeScrolling()
+        coordinator.syntaxLanguage = syntaxLanguage
+        coordinator.highlightSyntax()
         return scrollView
     }
 
@@ -56,6 +60,10 @@ struct SourceEditorView: NSViewRepresentable {
             textView.typingAttributes[.font] = font
         }
         context.coordinator.apply(text, to: textView)
+        if context.coordinator.syntaxLanguage != syntaxLanguage {
+            context.coordinator.syntaxLanguage = syntaxLanguage
+            context.coordinator.highlightSyntax()
+        }
     }
 
     static func dismantleNSView(_ scrollView: NSScrollView, coordinator: Coordinator) {
@@ -114,6 +122,9 @@ struct SourceEditorView: NSViewRepresentable {
         private var scrollObserver: NSObjectProtocol?
         private var cachedLineStarts: [Int]?
 
+        var syntaxLanguage: String?
+        private var highlightTask: Task<Void, Never>?
+
         // Find state
         private var activeSearch: FindSearch?
         private var regex: NSRegularExpression?
@@ -124,7 +135,13 @@ struct SourceEditorView: NSViewRepresentable {
             self.text = text
         }
 
+        func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString: String?) -> Bool {
+            followRenderedPaneIfEditedElsewhere()
+            return true
+        }
+
         func textDidChange(_ notification: Notification) {
+            followRenderedPaneIfEditedElsewhere()
             textContentDidChange()
             guard !isApplyingExternalChange, let textView = notification.object as? NSTextView else { return }
             text.wrappedValue = textView.string
@@ -170,11 +187,39 @@ struct SourceEditorView: NSViewRepresentable {
             textView.didChangeText()
         }
 
+        /// Edits that arrive while the user works in the rendered pane (typing, Undo) can shift this pane's
+        /// scroll position, for example near the end of the document. Those shifts mustn't scroll the
+        /// rendered pane, so it leads for a moment.
+        private func followRenderedPaneIfEditedElsewhere() {
+            guard let textView, textView.window?.firstResponder !== textView else { return }
+            scrollSync?.hold(leader: .rendered)
+        }
+
         private func textContentDidChange() {
             cachedLineStarts = nil
+            scheduleSyntaxHighlighting()
             guard activeSearch != nil else { return }
             runSearch(keepingIndex: currentMatch)
             findController?.engine(self, didUpdate: result())
+        }
+
+        // MARK: Syntax colouring
+
+        func highlightSyntax() {
+            highlightTask?.cancel()
+            guard let textView else { return }
+            SyntaxHighlighter.shared.highlight(textView, language: syntaxLanguage)
+        }
+
+        /// Recolours shortly after typing pauses, rather than on every keystroke.
+        private func scheduleSyntaxHighlighting() {
+            guard syntaxLanguage != nil else { return }
+            highlightTask?.cancel()
+            highlightTask = Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(80))
+                guard !Task.isCancelled else { return }
+                self?.highlightSyntax()
+            }
         }
 
         // MARK: Scrolling
@@ -195,7 +240,14 @@ struct SourceEditorView: NSViewRepresentable {
             scrollObserver = nil
         }
 
+        /// The clip view's last scroll position, so resizes (which also change its bounds) aren't taken for scrolling.
+        private var lastScrollY: CGFloat = 0
+
         private func didScroll() {
+            guard let clipView = scrollView?.contentView else { return }
+            let y = clipView.bounds.origin.y
+            guard y != lastScrollY else { return }
+            lastScrollY = y
             guard !isScrollingProgrammatically, let scrollSync, scrollSync.isLinked else { return }
             scrollSync.pane(.markdown, didScrollTo: topLine)
         }
