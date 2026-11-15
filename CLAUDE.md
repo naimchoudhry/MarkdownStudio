@@ -1,18 +1,23 @@
 # Markdown Studio
 
-## Keep the docs in step with the app
+## Keep the docs in step with the appxx
 
 Every user-visible change (new feature, changed behaviour, new shortcut, notable fix) must update all of these in the same change, before it's reported as done:
 
 1. **Version history:** `MarkdownStudio/Guide/VersionHistory.swift`. Add the change to the newest release section, or start a new section at the top (`## 1.x — Month Year`) for a new release.
+
 2. **App version:** before changing it, **ask the user** whether the change is:
+
    - a **primary** update: a new major version (e.g. 1.3 → 2.0),
    - a **secondary** update: a new minor version (e.g. 1.3 → 1.4), or
    - part of the **current** release, if it hasn't been released yet (version stays the same; add to its Version History section).
 
    Then set `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `MarkdownStudio.xcodeproj/project.pbxproj` (both configurations). The build number goes up by one for each new version. Help ▸ Version History and About Markdown Studio read these.
+
 3. **In-app guide:** `MarkdownStudio/Guide/GuideContent.swift`. Update the section that covers the feature, or add one (and list it in `chapters`), plus the Keyboard Shortcuts section for any new shortcut.
+
 4. **Help menu:** `HelpCommands` in `MarkdownStudio/AppCommands.swift`, if the change adds a new guide page or help window worth linking.
+
 5. **README:** `README.md`. Update What's new, Features, Keyboard shortcuts and How it works (including the file tree for new source files) as relevant.
 
 Purely internal changes (refactoring, tests, build scripts) don't need these updates.

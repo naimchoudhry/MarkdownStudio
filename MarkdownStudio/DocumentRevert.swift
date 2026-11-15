@@ -64,7 +64,7 @@ final class DocumentRevert {
     }
 }
 
-/// Window toolbar menu for reverting the tab's document.
+/// Status bar menu for reverting the tab's document.
 struct RevertMenu: View {
     let revert: DocumentRevert
     /// The document's text, so the menu's enabled states are worked out again whenever it changes.
@@ -81,7 +81,12 @@ struct RevertMenu: View {
                 .disabled(!revert.canBrowseVersions)
         } label: {
             Label("Revert", systemImage: "clock.arrow.circlepath")
+                .labelStyle(.titleAndIcon)
         }
+        .menuStyle(.borderlessButton)
+        .controlSize(.small)
+        .font(.subheadline)
+        .fixedSize()
         .help("Revert this document to how it was when opened or last saved, or browse earlier versions")
     }
 }

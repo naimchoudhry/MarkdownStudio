@@ -10,6 +10,7 @@ struct ContentView: View {
     @State private var revert = DocumentRevert()
     @AppStorage(ViewZoom.key) private var zoom = 1.0
     @AppStorage(PathTitle.showPathKey) private var showsFilePath = true
+    @AppStorage(PathTitle.showStatusBarKey) private var showsStatusBar = true
 
     /// Markdown files get both panes; other text files (code, config, plain text) only the source pane.
     private var format: DocumentFormat { DocumentFormat(url: fileURL) }
@@ -34,13 +35,19 @@ struct ContentView: View {
                 }
                 .frame(minWidth: 280, maxWidth: .infinity, maxHeight: .infinity)
             }
+
+            // The document's whole path, and Revert once the document has changed.
+            if showsStatusBar {
+                Divider()
+                PathStatusBar(fileURL: fileURL) {
+                    if revert.hasChanges(in: document.text) {
+                        RevertMenu(revert: revert, text: document.text)
+                    }
+                }
+            }
         }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                // Only once the document has changed since this tab opened it.
-                if revert.hasChanges(in: document.text) {
-                    RevertMenu(revert: revert, text: document.text)
-                }
                 Toggle(isOn: $showsFilePath) {
                     Label("Show File Path", systemImage: "arrow.turn.down.right")
                 }
@@ -195,13 +202,17 @@ struct MarkdownPaneButton: View {
 
     var body: some View {
         let visible = layout.isMarkdownPaneVisible
-        Button(visible ? "Hide Markdown Pane" : "Show Markdown Pane", systemImage: "sidebar.left") {
+        // A panel with an arrow pointing the way it will go: collapse left, or expand back out.
+        Button(
+            visible ? "Hide Markdown Pane" : "Show Markdown Pane",
+            systemImage: visible ? "rectangle.lefthalf.inset.filled.arrow.left" : "rectangle.righthalf.inset.filled.arrow.right"
+        ) {
             layout.toggleMarkdownPane()
         }
         .labelStyle(.iconOnly)
         .buttonStyle(.borderless)
-        // Slightly emphasised: in the accent colour.
-        .foregroundStyle(.tint)
+        // Accent-coloured only while the pane is hidden and can be brought back.
+        .foregroundStyle(visible ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
         .help(visible ? "Hide the Markdown pane (⌃⌘M)" : "Show the Markdown pane (⌃⌘M)")
     }
 }

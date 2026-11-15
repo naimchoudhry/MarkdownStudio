@@ -5,6 +5,8 @@ import SwiftUI
 /// truncating whole folder names from the front: `…/parent/folder/file.md`.
 struct PathTitle: NSViewRepresentable {
     static let showPathKey = "ShowFilePathInTitle"
+    /// View ▸ Show Status Bar (the bar along the bottom of the window with the whole path).
+    static let showStatusBarKey = "ShowStatusBar"
 
     let fileURL: URL?
     /// When off, the title and tab show just the file name.
@@ -148,13 +150,19 @@ struct PathTitle: NSViewRepresentable {
         }
     }
 
+    /// The whole path, with the home folder shown as `~`.
+    static func displayPath(_ url: URL) -> String {
+        // The sandbox's home is the app container, so abbreviate the user's real home folder.
+        let path = url.path
+        if let home = getpwuid(getuid())?.pointee.pw_dir.map({ String(cString: $0) }), path.hasPrefix(home + "/") {
+            return "~" + path.dropFirst(home.count)
+        }
+        return path
+    }
+
     /// The longest form of the path that fits: `~/a/b/file.md`, then `…/b/file.md`, then `…/file.md`.
     static func fitting(_ url: URL, width: CGFloat, font: NSFont) -> String {
-        // The sandbox's home is the app container, so abbreviate the user's real home folder.
-        var path = url.path
-        if let home = getpwuid(getuid())?.pointee.pw_dir.map({ String(cString: $0) }), path.hasPrefix(home + "/") {
-            path = "~" + path.dropFirst(home.count)
-        }
+        let path = displayPath(url)
         var components = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
         if path.hasPrefix("/") { components.insert("", at: 0) } // keep the leading "/" for absolute paths
         let fileName = components.last ?? url.lastPathComponent
@@ -171,5 +179,32 @@ struct PathTitle: NSViewRepresentable {
             best = candidate
         }
         return best
+    }
+}
+
+/// A slim bar along the bottom of the window with the document's whole path, and any controls
+/// (such as Revert) at its right end. View ▸ Show Status Bar turns it on or off for every window.
+struct PathStatusBar<Accessory: View>: View {
+    let fileURL: URL?
+    @ViewBuilder var accessory: () -> Accessory
+
+    var body: some View {
+        let text = fileURL.map(PathTitle.displayPath) ?? "Not saved yet"
+        HStack(spacing: 6) {
+            Image(systemName: "folder")
+                .foregroundStyle(.secondary)
+            Text(text)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .textSelection(.enabled)
+                .help(text)
+            Spacer(minLength: 0)
+            accessory()
+        }
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 12)
+        .frame(height: 28)
+        .background(.bar)
     }
 }

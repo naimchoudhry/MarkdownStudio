@@ -81,7 +81,7 @@ enum GuideContent {
 
     ## Reverting changes
 
-    Once you've changed a document, a **Revert** button (a clock with an arrow) appears in the window toolbar. Use it, or the File menu:
+    Once you've changed a document, a **Revert** menu (a clock with an arrow) appears at the right end of the status bar at the bottom of the window. Use it, or the File menu (which also works while the status bar is hidden):
 
     | Command | What it does |
     | --- | --- |
@@ -143,7 +143,7 @@ enum GuideContent {
 
     ## Hiding the Markdown pane
 
-    To see only the formatted document, click the **sidebar** button at the left of the Markdown pane's header, or choose **View ▸ Show or Hide Markdown Pane** (⌃⌘M). While the pane is hidden, the same button sits at the start of the formatting toolbar: click it to bring the Markdown pane back; it opens at the same place in the document as the rendered pane.
+    To see only the formatted document, click the button at the left of the Markdown pane's header (a panel with a left arrow), or choose **View ▸ Show or Hide Markdown Pane** (⌃⌘M). While the pane is hidden, the button sits at the start of the formatting toolbar, in orange with a right arrow: click it to bring the Markdown pane back; it opens at the same place in the document as the rendered pane.
 
     Each tab remembers this on its own, so you can hide the Markdown pane in one tab and keep both panes in another. While the pane is hidden, Find & Replace searches the rendered pane.
 
@@ -154,6 +154,8 @@ enum GuideContent {
     ## File path in the title
 
     The window title and tabs show where the file is, as well as its name: as much of the folder path as fits, shortened from the front, for example `…/Projects/Notes/todo.md`. Your home folder is shown as `~`.
+
+    The status bar along the bottom of the window shows the document's complete path, however much fits in the title. You can select and copy the path from it. To hide or show the status bar in every window, choose **View ▸ Show Status Bar** (⌘/).
 
     To show just the file name, click the **path** button (an arrow turning down and right) in the window toolbar (it's highlighted while the path is shown), or choose **View ▸ Show File Path in Title**. The setting is remembered.
 
@@ -494,6 +496,7 @@ enum GuideContent {
     | Actual size | ⌘0 |
     | Link or unlink scrolling | ⌥⌘L |
     | Show or hide the Markdown pane | ⌃⌘M |
+    | Show or hide the status bar | ⌘/ |
 
     ## Formatting (rendered pane)
 

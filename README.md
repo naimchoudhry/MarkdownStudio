@@ -13,6 +13,10 @@
 
 ## What's new
 
+**1.4** — November 2026
+- **Status bar** with the document's full path (View ▸ Show Status Bar, ⌘/). The **Revert** menu now lives at its right end, shown once the document has changed.
+- The Show/Hide Markdown Pane button points the way the pane will go, and is orange only while the pane is hidden.
+
 **1.3** — November 2026
 - **Text and code files.** Open `.txt`, `.swift`, `.py`, `.json`, `.zshrc` and other text files for quick editing, like a Mac-native alternative to `nano` or `vim`. They get a single source pane, coloured in Xcode's colours and headed with the file's format ("Swift", "JSON", "Python"…), and are saved back exactly as they were.
 - Open any text file from Terminal with `open -a MarkdownStudio <file>`.
@@ -41,7 +45,7 @@
 - **Find & Replace.** Search either pane, with match case, whole word / starts with / ends with, wrap around, and regular expressions with `$1`-style replacements.
 - **Linked scrolling.** Keep both panes aligned as you scroll, line for line, even inside long lists and tables, or scroll them independently.
 - **Collapsible sections and outline view.** Fold any section from its title, or show only Titles 1–N to see the document's outline.
-- **Zoom, Dark Mode and file-path titles.** Scale the text in both panes, choose light, dark or system appearance, and see where each file lives in the window title and tabs.
+- **Zoom, Dark Mode and file paths.** Scale the text in both panes, choose light, dark or system appearance, and see where each file lives in the window title, tabs and status bar.
 - **Hideable Markdown pane.** Hide the source to see only the formatted document, separately in each tab. The Markdown pane has a soft, paper-textured background.
 - **Revert and version history.** Go back to the document as it was when opened in each tab, to the last save, or browse every earlier version.
 - **Tabs or windows.** Choose whether opened files go in a new tab, a new window, or ask each time. The tab bar's **+** button offers a new document or opening existing ones.
@@ -101,6 +105,7 @@ The script builds into `build/`, quits the app if it's running, replaces `/Appli
 | Show everything / titles 1–N | ⌃⌘0 / ⌃⌘1–⌃⌘6 |
 | Link or unlink scrolling | ⌥⌘L |
 | Show or hide the Markdown pane | ⌃⌘M |
+| Show or hide the status bar | ⌘/ |
 | Open in new tab | ⌥⌘O |
 | Revert to last opened | ⌥⌘Z |
 | Markdown Studio Guide | ⌘? |

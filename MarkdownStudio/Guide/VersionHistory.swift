@@ -26,6 +26,12 @@ enum VersionHistory {
     }
 
     private static let releases = #"""
+    ## 1.4 — November 2026
+
+    - **Status bar** along the bottom of the window, with the document's full path, which you can select and copy. Turn it on or off with **View ▸ Show Status Bar** (⌘/).
+    - The **Revert** menu has moved from the window toolbar to the right end of the status bar. It still appears only once the document has changed.
+    - The Show/Hide Markdown Pane button shows which way the pane will go: a panel with a left arrow to hide it, and with a right arrow to bring it back. It's orange only while the pane is hidden.
+
     ## 1.3 — November 2026
 
     **Text and code files**

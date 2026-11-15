@@ -116,6 +116,7 @@ struct ScrollCommands: Commands {
     @ObservedObject private var active = ActiveDocument.shared
     @AppStorage(AppAppearance.key) private var appearance = AppAppearance.system
     @AppStorage(PathTitle.showPathKey) private var showsFilePath = true
+    @AppStorage(PathTitle.showStatusBarKey) private var showsStatusBar = true
     private var scrollSync: ScrollSync? { ActiveDocument.shared.current()?.scroll }
     private var editor: EditorController? { ActiveDocument.shared.current()?.editor }
 
@@ -131,6 +132,8 @@ struct ScrollCommands: Commands {
             Button("Show or Hide Markdown Pane") { ActiveDocument.shared.current()?.layout.toggleMarkdownPane() }
                 .keyboardShortcut("m", modifiers: [.command, .control])
             Toggle("Show File Path in Title", isOn: $showsFilePath)
+            Toggle("Show Status Bar", isOn: $showsStatusBar)
+                .keyboardShortcut("/", modifiers: .command)
             Picker("Dark Mode", selection: AppAppearance.binding($appearance)) {
                 ForEach(AppAppearance.allCases) { option in
                     Text(option.title).tag(option)
