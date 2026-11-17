@@ -3,6 +3,8 @@ import SwiftUI
 /// Find & replace bar shown across the top of a document window.
 struct FindBar: View {
     @Bindable var find: FindController
+    /// Whether to offer searching the Markdown or the rendered pane: only when both are showing.
+    var showsTargetPicker = true
     @FocusState private var focusedField: Field?
 
     private enum Field {
@@ -34,15 +36,17 @@ struct FindBar: View {
                     .fixedSize()
                     .disabled(find.matchCount == 0)
 
-                    Picker("Search In", selection: $find.target) {
-                        ForEach(FindController.Target.allCases) { target in
-                            Text(target.title).tag(target)
+                    if showsTargetPicker {
+                        Picker("Search In", selection: $find.target) {
+                            ForEach(FindController.Target.allCases) { target in
+                                Text(target.title).tag(target)
+                            }
                         }
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .fixedSize()
+                        .help("Search the Markdown source or the rendered text")
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                    .fixedSize()
-                    .help("Search the Markdown source or the rendered text")
 
                     Spacer(minLength: 0)
 

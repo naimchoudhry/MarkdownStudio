@@ -26,6 +26,15 @@ enum VersionHistory {
     }
 
     private static let releases = #"""
+    ## 1.5 — November 2026
+
+    - **Pinch to zoom:** pinch on the trackpad to make the text larger or smaller, smoothly, in both panes, the guide and this window. It snaps to 100% when you're close.
+    - **Fold JSON:** collapse any object or array in a `.json` file to `{…}` or `[…]` with the arrows beside the text, or all at once with Fold All and Unfold All in the header. The file itself is unchanged.
+    - Large code files (over 2 MB, up to 20 MB) are now coloured too, in the background so typing stays quick.
+    - Text and code files, such as `.swift` or `.json`, have a plain white background; the paper-textured gray is kept for Markdown.
+    - The find bar's **Markdown / Rendered** switch only appears when both panes are showing, not for text and code files or while the Markdown pane is hidden.
+    - Files without an extension, such as `README`, `LICENSE` or an executable script, can be opened with Finder's **Open With ▸ Markdown Studio**. They open as plain text.
+
     ## 1.4 — November 2026
 
     - **Status bar** along the bottom of the window, with the document's full path, which you can select and copy. Turn it on or off with **View ▸ Show Status Bar** (⌘/).

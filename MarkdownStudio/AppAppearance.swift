@@ -55,6 +55,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppAppearance.apply(.current)
         WindowPlacement.migrateTabBarSetting()
+        ViewZoom.startPinchToZoom()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {

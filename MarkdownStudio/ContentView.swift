@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var scrollSync = ScrollSync()
     @State private var layout = PaneLayout()
     @State private var revert = DocumentRevert()
+    @State private var folding = CodeFolding()
     @AppStorage(ViewZoom.key) private var zoom = 1.0
     @AppStorage(PathTitle.showPathKey) private var showsFilePath = true
     @AppStorage(PathTitle.showStatusBarKey) private var showsStatusBar = true
@@ -18,7 +19,7 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             if find.isVisible {
-                FindBar(find: find)
+                FindBar(find: find, showsTargetPicker: format.isMarkdown && layout.isMarkdownPaneVisible)
                 Divider()
             }
 
@@ -26,11 +27,11 @@ struct ContentView: View {
                 markdownPanes
             } else {
                 VStack(spacing: 0) {
-                    SourceHeader(text: document.text, format: format, layout: layout)
+                    SourceHeader(text: document.text, format: format, layout: layout, folding: folding)
                     Divider()
                     SourceEditorView(
                         text: $document.text, findController: find, scrollSync: scrollSync, zoom: zoom,
-                        syntaxLanguage: format.syntaxLanguage
+                        syntaxLanguage: format.syntaxLanguage, isMarkdown: false, folding: folding
                     )
                 }
                 .frame(minWidth: 280, maxWidth: .infinity, maxHeight: .infinity)
@@ -223,6 +224,7 @@ private struct SourceHeader: View {
     let text: String
     let format: DocumentFormat
     let layout: PaneLayout
+    var folding: CodeFolding?
 
     var body: some View {
         HStack {
@@ -232,6 +234,18 @@ private struct SourceHeader: View {
             Label(format.name, systemImage: "number")
                 .font(.callout.weight(.medium))
             Spacer()
+            if let folding, format.syntaxLanguage == "json" {
+                HStack(spacing: 2) {
+                    Button("Fold All", systemImage: "arrow.down.right.and.arrow.up.left") { folding.foldAll() }
+                        .help("Collapse every object and array inside the top level")
+                    Button("Unfold All", systemImage: "arrow.up.left.and.arrow.down.right") { folding.unfoldAll() }
+                        .help("Expand every collapsed object and array")
+                }
+                .labelStyle(.iconOnly)
+                .buttonStyle(.borderless)
+                .foregroundStyle(.secondary)
+                .padding(.trailing, 6)
+            }
             Group {
                 if format.isMarkdown {
                     Text("\(wordCount) words")

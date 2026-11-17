@@ -1,25 +1,27 @@
 import AppKit
 import JavaScriptCore
 
-/// Colours source code in the Markdown (source) pane, using the same tokenizer (`syntax.js`) and the
-/// same Xcode-style colours as code blocks in the rendered pane. It runs in Apple's built-in
-/// JavaScriptCore, and only sets the layout manager's temporary attributes, so the text is untouched.
-@MainActor
-final class SyntaxHighlighter {
-    static let shared = SyntaxHighlighter()
+/// A coloured span of source code, as a `Syntax.TYPES` name.
+struct SyntaxToken: Sendable {
+    let range: NSRange
+    let type: String
+}
 
-    /// Very large files are left uncoloured, to keep typing fast.
-    static let maximumLength = 2_000_000
-
+/// Runs the `syntax.js` tokenizer in Apple's built-in JavaScriptCore. Not thread-safe: each owner
+/// (the main-thread highlighter, the background one for large files) keeps its own.
+nonisolated final class SyntaxEngine {
     private let context: JSContext?
     private let tokenizeFunction: JSValue?
+    /// The token types, in `Syntax.TYPES` order.
+    private let types: [String]
 
-    private init() {
+    init() {
         guard let url = Bundle.main.url(forResource: "syntax", withExtension: "js"),
               let source = try? String(contentsOf: url, encoding: .utf8),
               let context = JSContext() else {
             context = nil
             tokenizeFunction = nil
+            types = []
             return
         }
         context.evaluateScript(source)
@@ -43,11 +45,8 @@ final class SyntaxHighlighter {
         types = context.evaluateScript("Syntax.TYPES")?.toArray()?.compactMap { $0 as? String } ?? []
     }
 
-    /// The token types, in `Syntax.TYPES` order.
-    private var types: [String] = []
-
-    /// The coloured ranges (UTF-16 offsets, as `NSString` uses) for `code`.
-    func tokens(in code: String, language: String) -> [(range: NSRange, color: NSColor)] {
+    /// The tokens (UTF-16 offsets, as `NSString` uses) for `code`.
+    func tokens(in code: String, language: String) -> [SyntaxToken] {
         guard let context, let tokenizeFunction,
               let result = tokenizeFunction.call(withArguments: [code, language]) else { return [] }
         let ref = context.jsGlobalContextRef
@@ -55,25 +54,60 @@ final class SyntaxHighlighter {
               let bytes = JSObjectGetTypedArrayBytesPtr(ref, object, nil) else { return [] }
         let count = JSObjectGetTypedArrayLength(ref, object, nil)
         let values = bytes.bindMemory(to: Int32.self, capacity: count)
-        var tokens: [(range: NSRange, color: NSColor)] = []
+        var tokens: [SyntaxToken] = []
         tokens.reserveCapacity(count / 3)
         for index in stride(from: 0, to: count - 2, by: 3) {
             let start = Int(values[index]), end = Int(values[index + 1]), type = Int(values[index + 2])
-            guard type >= 0, type < types.count, let color = Self.colors[types[type]] else { continue }
-            tokens.append((NSRange(location: start, length: end - start), color))
+            guard type >= 0, type < types.count else { continue }
+            tokens.append(SyntaxToken(range: NSRange(location: start, length: end - start), type: types[type]))
         }
         return tokens
     }
+}
+
+/// Tokenizes large files away from the main thread, so typing doesn't pause while they're coloured.
+actor BackgroundSyntaxTokenizer {
+    static let shared = BackgroundSyntaxTokenizer()
+    private let engine = SyntaxEngine()
+
+    func tokens(in code: String, language: String) -> [SyntaxToken] {
+        guard !Task.isCancelled else { return [] }
+        return engine.tokens(in: code, language: language)
+    }
+}
+
+/// Colours source code in the Markdown (source) pane, using the same tokenizer (`syntax.js`) and the
+/// same Xcode-style colours as code blocks in the rendered pane. It only sets the layout manager's
+/// temporary attributes, so the text is untouched.
+@MainActor
+final class SyntaxHighlighter {
+    static let shared = SyntaxHighlighter()
+
+    /// Enormous files are left uncoloured.
+    static let maximumLength = 20_000_000
+    /// Files longer than this are tokenized in the background (see `BackgroundSyntaxTokenizer`).
+    static let backgroundLength = 200_000
+
+    private let engine = SyntaxEngine()
 
     /// Recolours all of the text view's text.
     func highlight(_ textView: NSTextView, language: String?) {
+        let length = (textView.string as NSString).length
+        guard let language, length > 0, length <= Self.maximumLength else {
+            apply([], to: textView)
+            return
+        }
+        apply(engine.tokens(in: textView.string, language: language), to: textView)
+    }
+
+    /// Replaces the text view's colours with `tokens`.
+    func apply(_ tokens: [SyntaxToken], to textView: NSTextView) {
         guard let layoutManager = textView.layoutManager else { return }
-        let string = textView.string
-        let length = (string as NSString).length
+        let length = (textView.string as NSString).length
         layoutManager.removeTemporaryAttribute(.foregroundColor, forCharacterRange: NSRange(location: 0, length: length))
-        guard let language, length > 0, length <= Self.maximumLength else { return }
-        for token in tokens(in: string, language: language) where NSMaxRange(token.range) <= length {
-            layoutManager.addTemporaryAttribute(.foregroundColor, value: token.color, forCharacterRange: token.range)
+        for token in tokens where NSMaxRange(token.range) <= length {
+            guard let color = Self.colors[token.type] else { continue }
+            layoutManager.addTemporaryAttribute(.foregroundColor, value: color, forCharacterRange: token.range)
         }
     }
 

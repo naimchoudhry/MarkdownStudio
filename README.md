@@ -13,6 +13,14 @@
 
 ## What's new
 
+**1.5** — November 2026
+- **Pinch to zoom** on the trackpad, smoothly, snapping to 100% when close.
+- **Fold JSON** objects and arrays with arrows in the margin, or Fold All / Unfold All.
+- Large code files (over 2 MB) are coloured too, in the background.
+- Text and code files have a plain white background; Markdown keeps its paper-textured gray.
+- The find bar's Markdown / Rendered switch only appears when both panes are showing.
+- Files without an extension, such as `README`, `LICENSE` or an executable script, can be opened from Finder with **Open With ▸ Markdown Studio**, as plain text.
+
 **1.4** — November 2026
 - **Status bar** with the document's full path (View ▸ Show Status Bar, ⌘/). The **Revert** menu now lives at its right end, shown once the document has changed.
 - The Show/Hide Markdown Pane button points the way the pane will go, and is orange only while the pane is hidden.
@@ -40,12 +48,12 @@
 - **Two editable panes.** Type Markdown on the left, or edit the formatted document on the right like a word processor. Each side updates the other as you type. Documents open with the rendered pane taking two thirds of the window.
 - **Formatting toolbar.** Text styles (Body, Title 1–6, Code Block), bold, italic, strikethrough, inline code, bulleted lists with bullet styles, numbered lists, checklists, block quotes, links and horizontal rules.
 - **Copy and paste that understands Markdown.** Copy from the rendered pane and get Markdown as plain text, plus rich text for other apps. Paste plain-text Markdown into the rendered pane and it's formatted.
-- **Text and code files too.** Open any text file, such as `.txt`, `.swift`, `.py`, `.json` or `.zshrc`, for quick editing: it gets a single coloured source pane headed with its format, and is saved back exactly as it was.
+- **Text and code files too.** Open any text file, such as `.txt`, `.swift`, `.py`, `.json`, `.zshrc` or a file with no extension, for quick editing: it gets a single coloured source pane headed with its format, and is saved back exactly as it was.
 - **Syntax colouring.** Fenced code blocks with a language name are coloured in the rendered pane in Xcode's colours: Swift, Python, JavaScript/TypeScript, JSON, shell, HTML, CSS, C/C++/Objective-C, Java, Kotlin, C#, Go, Rust, Ruby, SQL, YAML and diffs.
 - **Find & Replace.** Search either pane, with match case, whole word / starts with / ends with, wrap around, and regular expressions with `$1`-style replacements.
 - **Linked scrolling.** Keep both panes aligned as you scroll, line for line, even inside long lists and tables, or scroll them independently.
 - **Collapsible sections and outline view.** Fold any section from its title, or show only Titles 1–N to see the document's outline.
-- **Zoom, Dark Mode and file paths.** Scale the text in both panes, choose light, dark or system appearance, and see where each file lives in the window title, tabs and status bar.
+- **Zoom, Dark Mode and file paths.** Scale the text in both panes (toolbar, ⌘+/⌘−, or pinch on the trackpad), choose light, dark or system appearance, and see where each file lives in the window title, tabs and status bar.
 - **Hideable Markdown pane.** Hide the source to see only the formatted document, separately in each tab. The Markdown pane has a soft, paper-textured background.
 - **Revert and version history.** Go back to the document as it was when opened in each tab, to the last save, or browse every earlier version.
 - **Tabs or windows.** Choose whether opened files go in a new tab, a new window, or ask each time. The tab bar's **+** button offers a new document or opening existing ones.
@@ -70,6 +78,10 @@ Supported Markdown includes CommonMark plus GitHub-Flavored Markdown tables, str
 **Text and code files**
 
 ![A Swift file open in Markdown Studio: a single pane headed "Swift", coloured in Xcode's colours, with other files in tabs](docs/images/code-file.png)
+
+**Folding JSON**
+
+![A JSON file with some objects folded to {…} and arrows in the margin to fold or unfold each one](docs/images/json-folding.png)
 
 ## Requirements
 
@@ -123,6 +135,7 @@ MarkdownStudio/
 ├── SourceEditorView.swift       Source pane (NSTextView)
 ├── DocumentFormat.swift         Markdown, or which kind of text/code file
 ├── SyntaxHighlighter.swift      Colours code files with syntax.js via JavaScriptCore
+├── CodeFolding.swift            Folds JSON objects and arrays (layout manager + margin arrows)
 ├── RenderedEditorView.swift     Rendered pane (WKWebView)
 ├── DocumentRevert.swift         Revert to last opened / last saved, per tab
 ├── LocalImages.swift            Images next to the document (folder access, file loading)

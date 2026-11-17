@@ -80,7 +80,7 @@ final class ScrollSync {
     private static let leaderHold = Duration.milliseconds(300)
 
     func pane(_ pane: Pane, didScrollTo line: Double) {
-        guard isLinked else { return }
+        guard isLinked, !ViewZoom.isPinching else { return }
         let now = ContinuousClock.now
         if let leader, leader != pane, now < leaderUntil { return }
         leader = pane

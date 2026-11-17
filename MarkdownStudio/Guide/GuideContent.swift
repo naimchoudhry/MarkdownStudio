@@ -149,7 +149,7 @@ enum GuideContent {
 
     ## Zooming
 
-    Make the text in both panes larger or smaller with the zoom buttons (small and large **A**) in the window toolbar, or with **View ▸ Zoom In** (⌘+), **Zoom Out** (⌘−) and **Actual Size** (⌘0). The zoom runs from 70% to 300%, applies to every document and this guide, and is remembered the next time you open the app. Point at a zoom button to see the current zoom.
+    Make the text in both panes larger or smaller with the zoom buttons (small and large **A**) in the window toolbar, or with **View ▸ Zoom In** (⌘+), **Zoom Out** (⌘−) and **Actual Size** (⌘0). You can also pinch on the trackpad to zoom smoothly; it snaps to 100% when you're close. The zoom runs from 70% to 300%, applies to every document and this guide, and is remembered the next time you open the app. Point at a zoom button to see the current zoom.
 
     ## File path in the title
 
@@ -181,7 +181,7 @@ enum GuideContent {
 
     Markdown Studio also works as a quick editor for plain text, source code and config files — the kind of file you might otherwise edit in Terminal with `nano` or `vim`.
 
-    When you open a file that isn't Markdown, the window shows a single plain-text pane. There's no rendered pane, formatting toolbar or linked scrolling. The pane's header names the file's format, such as **Swift**, **JSON** or **Python**, and counts its lines.
+    When you open a file that isn't Markdown, the window shows a single plain-text pane, on a plain white background. There's no rendered pane, formatting toolbar or linked scrolling. The pane's header names the file's format, such as **Swift**, **JSON** or **Python**, and counts its lines.
 
     ## Colouring
 
@@ -200,7 +200,13 @@ enum GuideContent {
     | Java, Kotlin, C#, Go, Rust, Ruby | `.java`, `.kt`, `.cs`, `.go`, `.rs`, `.rb` |
     | SQL, YAML, Diff | `.sql`, `.yaml`, `.yml`, `.diff`, `.patch` |
 
-    Plain text (`.txt`), logs, CSV and other text files open without colouring. Files that aren't text, such as images, aren't opened.
+    Plain text (`.txt`), logs, CSV and other text files open without colouring, as do files without an extension, such as `README`, `LICENSE` or an executable script. Open them from Finder with **Open With ▸ Markdown Studio** (for some files it's under **Other…**). Files that aren't text, such as images, aren't opened.
+
+    ## Folding JSON
+
+    In a JSON file, an arrow in the narrow margin beside the text marks each object or array that spans several lines. Click it to collapse the block to `{…}` or `[…]`, and click it again, or click the `…`, to expand it. The buttons at the right of the JSON header fold everything inside the top level, or unfold everything.
+
+    Folding only changes what you see: the file is saved exactly as it is. Editing inside a folded block, or finding text in one, opens it.
 
     ## Saving
 
@@ -331,7 +337,7 @@ enum GuideContent {
 
     ## Which pane is searched
 
-    The **Markdown / Rendered** switch in the find bar chooses where to search. It follows the pane you last clicked in, and you can change it at any time.
+    The **Markdown / Rendered** switch in the find bar chooses where to search. It follows the pane you last clicked in, and you can change it at any time. It's shown only while both panes are showing: with one pane, the find bar searches that pane.
 
     | Searching | Finds | Example |
     | --- | --- | --- |

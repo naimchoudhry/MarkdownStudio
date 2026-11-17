@@ -9,6 +9,27 @@ struct SourceEditorView: NSViewRepresentable {
     var zoom = 1.0
     /// The `syntax.js` language to colour the text as, or nil for none.
     var syntaxLanguage: String?
+    /// Markdown gets the paper-textured gray background; other text files a plain white one.
+    var isMarkdown = true
+    /// Folding for JSON files; attached only while the file is JSON.
+    var folding: CodeFolding?
+
+    private var foldsCode: Bool { syntaxLanguage == "json" }
+
+    private func updateFolding(_ scrollView: NSScrollView, _ textView: SourceTextView, _ coordinator: Coordinator) {
+        guard let folding else { return }
+        if foldsCode, !folding.isAttached {
+            folding.attach(to: textView, in: scrollView)
+        } else if !foldsCode, folding.isAttached {
+            folding.detach()
+        }
+        coordinator.folding = foldsCode ? folding : nil
+        textView.folding = coordinator.folding
+    }
+
+    private var background: NSColor {
+        isMarkdown ? SourceTextView.paneBackground : .textBackgroundColor
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -30,7 +51,7 @@ struct SourceEditorView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.font = .monospacedSystemFont(ofSize: ViewZoom.baseSourceFontSize * zoom, weight: .regular)
         textView.textContainerInset = NSSize(width: 12, height: 16)
-        textView.backgroundColor = SourceTextView.paneBackground
+        textView.backgroundColor = background
         textView.string = text
         scrollView.contentView.postsBoundsChangedNotifications = true
 
@@ -47,18 +68,21 @@ struct SourceEditorView: NSViewRepresentable {
         coordinator.observeScrolling()
         coordinator.syntaxLanguage = syntaxLanguage
         coordinator.highlightSyntax()
+        updateFolding(scrollView, textView, coordinator)
         return scrollView
     }
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         context.coordinator.text = $text
-        guard let textView = scrollView.documentView as? NSTextView else { return }
+        guard let textView = scrollView.documentView as? SourceTextView else { return }
+        updateFolding(scrollView, textView, context.coordinator)
         let fontSize = CGFloat(ViewZoom.baseSourceFontSize * zoom)
         if textView.font?.pointSize != fontSize {
             let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
             textView.font = font
             textView.typingAttributes[.font] = font
         }
+        if textView.backgroundColor != background { textView.backgroundColor = background }
         context.coordinator.apply(text, to: textView)
         if context.coordinator.syntaxLanguage != syntaxLanguage {
             context.coordinator.syntaxLanguage = syntaxLanguage
@@ -102,6 +126,25 @@ struct SourceEditorView: NSViewRepresentable {
         }
 
         var onBecomeFirstResponder: (() -> Void)?
+        weak var folding: CodeFolding?
+
+        /// Clicking a folded block's `…` unfolds it.
+        override func mouseDown(with event: NSEvent) {
+            if let folding, event.clickCount == 1, let layoutManager, let textContainer {
+                var point = convert(event.locationInWindow, from: nil)
+                point.x -= textContainerOrigin.x
+                point.y -= textContainerOrigin.y
+                var fraction: CGFloat = 0
+                let glyph = layoutManager.glyphIndex(for: point, in: textContainer, fractionOfDistanceThroughGlyph: &fraction)
+                let glyphRect = layoutManager.boundingRect(forGlyphRange: NSRange(location: glyph, length: 1), in: textContainer)
+                if glyphRect.contains(point),
+                   let block = folding.foldedBlock(atEllipsis: layoutManager.characterIndexForGlyph(at: glyph)) {
+                    folding.toggle(block)
+                    return
+                }
+            }
+            super.mouseDown(with: event)
+        }
 
         override func becomeFirstResponder() -> Bool {
             let accepted = super.becomeFirstResponder()
@@ -116,6 +159,7 @@ struct SourceEditorView: NSViewRepresentable {
         weak var scrollView: NSScrollView?
         weak var findController: FindController?
         weak var scrollSync: ScrollSync?
+        weak var folding: CodeFolding?
 
         private var isApplyingExternalChange = false
         private var isScrollingProgrammatically = false
@@ -137,6 +181,7 @@ struct SourceEditorView: NSViewRepresentable {
 
         func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString: String?) -> Bool {
             followRenderedPaneIfEditedElsewhere()
+            folding?.textWillChange(in: range, replacementLength: (replacementString as NSString?)?.length ?? 0)
             return true
         }
 
@@ -197,6 +242,7 @@ struct SourceEditorView: NSViewRepresentable {
 
         private func textContentDidChange() {
             cachedLineStarts = nil
+            folding?.textDidChange()
             scheduleSyntaxHighlighting()
             guard activeSearch != nil else { return }
             runSearch(keepingIndex: currentMatch)
@@ -208,15 +254,29 @@ struct SourceEditorView: NSViewRepresentable {
         func highlightSyntax() {
             highlightTask?.cancel()
             guard let textView else { return }
-            SyntaxHighlighter.shared.highlight(textView, language: syntaxLanguage)
+            let length = (textView.string as NSString).length
+            guard let language = syntaxLanguage, length > SyntaxHighlighter.backgroundLength,
+                  length <= SyntaxHighlighter.maximumLength else {
+                SyntaxHighlighter.shared.highlight(textView, language: syntaxLanguage)
+                return
+            }
+            // Large files are tokenized in the background; the colours are applied if the text
+            // hasn't changed meanwhile.
+            let string = textView.string
+            highlightTask = Task { [weak self] in
+                let tokens = await BackgroundSyntaxTokenizer.shared.tokens(in: string, language: language)
+                guard !Task.isCancelled, let textView = self?.textView, textView.string == string else { return }
+                SyntaxHighlighter.shared.apply(tokens, to: textView)
+            }
         }
 
-        /// Recolours shortly after typing pauses, rather than on every keystroke.
+        /// Recolours shortly after typing pauses, rather than on every keystroke (longer for large files).
         private func scheduleSyntaxHighlighting() {
             guard syntaxLanguage != nil else { return }
             highlightTask?.cancel()
+            let isLarge = ((textView?.string ?? "") as NSString).length > SyntaxHighlighter.backgroundLength
             highlightTask = Task { [weak self] in
-                try? await Task.sleep(for: .milliseconds(80))
+                try? await Task.sleep(for: .milliseconds(isLarge ? 400 : 80))
                 guard !Task.isCancelled else { return }
                 self?.highlightSyntax()
             }
@@ -363,6 +423,7 @@ struct SourceEditorView: NSViewRepresentable {
         private func revealCurrentMatch() {
             guard let textView, matches.indices.contains(currentMatch) else { return }
             let range = matches[currentMatch]
+            folding?.reveal(range)
             textView.setSelectedRange(range)
             textView.scrollRangeToVisible(range)
             textView.showFindIndicator(for: range)

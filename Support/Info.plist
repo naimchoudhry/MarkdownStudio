@@ -53,10 +53,11 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
-			<string>None</string>
+			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.data</string>
+				<string>public.unix-executable</string>
 			</array>
 		</dict>
 	</array>

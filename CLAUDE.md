@@ -1,6 +1,6 @@
 # Markdown Studio
 
-## Keep the docs in step with the appxx
+## Keep the docs in step with the app
 
 Every user-visible change (new feature, changed behaviour, new shortcut, notable fix) must update all of these in the same change, before it's reported as done:
 
@@ -31,5 +31,6 @@ When the user asks for a release build, do all of this:
 3. **Screenshots:** retake the README screenshots (`docs/images/`) from the new build, in light and dark mode, adding any that new features need, and update the README to use them.
 4. **Videos:** re-record any demo videos the README links to, so they show the current app.
 5. **Build:** build Release and install it with `./install.sh`, then verify it runs.
+6. **Commit, push and merge:** commit everything on `develop`, push it, merge `develop` into `main`, push `main`, tag the release `v1.x` and push the tag, then switch back to `develop`. Asking for a release build counts as asking for this commit and push.
 
 Take screenshots and videos with a temporary in-app harness (removed afterwards), using demo documents rather than the user's own files, and never with the user's file paths or personal details visible.
